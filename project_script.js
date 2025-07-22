@@ -1,7 +1,19 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const projectGrid = document.querySelector('.project-grid');
     const searchHeader = document.getElementById('search-results-header');
-    const allProjects = JSON.parse(localStorage.getItem('projects')) || [];
+
+    if (!projectGrid) return; // Exit if the main grid element isn't found
+
+    let allProjects = [];
+    try {
+        const response = await fetch('/api/projects');
+        if (!response.ok) throw new Error('Failed to load projects.');
+        allProjects = await response.json();
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        projectGrid.innerHTML = `<div class="no-project-card"><i class="fa-solid fa-exclamation-triangle fa-4x"></i><p>Could not load projects from GitHub. Is the server running?</p></div>`;
+        return;
+    }
 
     // Get search query from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -18,8 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         searchHeader.innerHTML = `<h2>All Projects</h2>`;
     }
-
-    if (!projectGrid) return; // Exit if the main grid element isn't found
 
     if (projectsToDisplay.length === 0) {
         // If no projects are stored, display the placeholder message
@@ -53,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <pre><code>${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
                 </div>
                 <div class="card-footer">
-                    <span>Uploaded on: ${project.date}</span>
+                    <!-- Date is not available from this API, so the footer can be simplified or removed -->
+                    <span>Source: GitHub</span>
                 </div>
             `;
             projectGrid.appendChild(card);
